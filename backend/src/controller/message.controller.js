@@ -26,7 +26,7 @@ export const getMessagesByUserId = async (req, res) => {
                 { senderId: myId, receiverId: userToChatId },
                 { senderId: userToChatId, receiverId: myId },
             ],
-        });
+        }).sort({ createdAt: 1 });
 
         res.status(200).json(messages);
 
@@ -41,6 +41,13 @@ export const sendMessage = async (req, res) => {
         const { text, image } = req.body;
         const { id: receiverId } = req.params;
         const senderId = req.user._id;
+
+        if(!text && !image) return res.status(400).json({error: "Text or image is required"});
+        
+        if(senderId === receiverId) return res.status(400).json({error: "cannot send messages to yourself."});
+
+        const receiverExists = await User.findById(receiverId);
+        if(!receiverExists) return res.status(400).json({error: "Receiver does not exist"});
 
         let imageUrl;
         if (image){
