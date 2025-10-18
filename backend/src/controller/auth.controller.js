@@ -1,6 +1,8 @@
 import User from "../models/user.js";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../lib/utils.js";
+import { sendWelcomeEmail } from "../emails/emailHandlers.js";
+import {ENV} from "../lib/env.js";
 
 export const signup = async (req, res) => {
 
@@ -16,15 +18,21 @@ export const signup = async (req, res) => {
             return res.status(400).json({message:"Password must be at least 6 characters"})
         }
 
-        //checks if emails valid: regex
+        // Check if user email is valid: regex
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if(!emailRegex.test(email)){
-            return res.status(400).json({message:"Invalid email format"});
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: "Invalid email format" });
         }
 
-        const existingUser = await User.findOne({email});
-        if(existingUser) return res.status(400).json({message:"email already exists"});
-
+        // Check if user already exists
+        const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+        if (existingUser) {
+            return res.status(400).json({
+                message: existingUser.email === email
+                    ? "Email already exists"
+                    : "Username already taken"
+            });
+        }
 
         // 123456  ==> w2okeqfndc2ccrd hashing
         const salt = await bcrypt.genSalt(10);
@@ -33,33 +41,30 @@ export const signup = async (req, res) => {
         const newUser = new User({
             username,
             email,
-            password:hashedPassword,
-        })
+            password: hashedPassword,
+        });
 
-        if(newUser){
-            generateToken(newUser._id, res)
-            await newUser.save()
+        const savedUser = await newUser.save();
+        generateToken(savedUser._id, res);
 
-            res.status(201).json({
-                _id:newUser._id,
-                username:newUser.username,
-                email:newUser.email,
-                profilePic:newUser.profilePic,
-            });
+        // Welcome email logic remains here...
+        try {
+            await sendWelcomeEmail(savedUser.email, savedUser.username, ENV.CLIENT_URL);
+            console.log("Welcome email initiated for:", savedUser.email);
+        } catch (error) {
+            console.error("Error sending welcome email:", error);
         }
-            else{
-                res.status(400).json({message:"Invalid user data"});
 
-            }
+        res.status(201).json({
+            _id: savedUser._id,
+            username: savedUser.username,
+            email: savedUser.email,
+            profilePic: savedUser.profilePic,
+        });
 
-    }
-    
-        catch (error) {
-
-            console.log("Error in signup controller:",error);
-            res.status(500).json({message:"Internal server error"});
-        
-    
+    } catch (error) {
+        console.log("Error in signup controller:", error);
+        res.status(500).json({ message: "Internal server error" });
     }
 
 };
