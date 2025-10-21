@@ -3,6 +3,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import BorderAnimatedContainer from "../components/BorderAnimatedContainer";
 import { MessageCircleIcon, LockIcon, MailIcon, UserIcon, LoaderIcon } from "lucide-react";
 import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
 
 function SignUpPage() {
   const [formData, setFormData] = useState({ username: "", email: "", password: "" });
@@ -10,6 +11,15 @@ function SignUpPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+      if (!formData.username.trim() || !formData.email.trim() || !formData.password.trim()) {
+        toast.error("All fields are required");
+        return;
+      }
+      
+      if (formData.password.length < 6) {
+        toast.error("Password must be at least 6 characters");
+        return;
+   }
     signup(formData);
   };
 
@@ -42,6 +52,8 @@ function SignUpPage() {
                         onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                         className="input"
                         placeholder="Enter your username"
+                        required
+                        maxLength={50}
                       />
                     </div>
                   </div>
@@ -58,6 +70,8 @@ function SignUpPage() {
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         className="input"
                         placeholder="Enter your email"
+                        required
+                        maxLength={100}
                       />
                     </div>
                   </div>
@@ -74,6 +88,9 @@ function SignUpPage() {
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         className="input"
                         placeholder="Enter your password"
+                        required
+                        minLength={6}
+                        maxLength={100}                      
                       />
                     </div>
                   </div>
