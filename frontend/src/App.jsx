@@ -3,15 +3,27 @@ import ChatPage from "./pages/ChatPage";
 import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
 import { useAuthStore } from "./store/useAuthStore";
+import { useEffect } from "react";
+import { Navigate } from "react-router";
+import { Toaster } from "react-hot-toast";
+import PageLoader from "./components/PageLoader";
+
+
 
 function App() {
-  const { authUser, isLoading, login } = useAuthStore();
+  const { checkAuth, isCheckingAuth, authUser } = useAuthStore();
 
-  console.log("auth user:", authUser);
-  console.log("is loading:", isLoading);
+  useEffect(() =>{
+    checkAuth();
+  },  [checkAuth]);
+
+  console.log({authUser});
+
+  if(isCheckingAuth) return <PageLoader/>;
+
 
   return (
-    <div className='relative h-screen w-screen bg-neutral-950 flex items-center justify-center overflow-hidden'>
+    <div className='relative h-screen w-screen bg-slate-900 flex items-center justify-center overflow-hidden'>
       {/* Background decorators */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_24px]" />
       <div className="absolute top-0 -left-4 size-96 bg-blue-500 opacity-20 blur-[100px]" />
@@ -19,10 +31,11 @@ function App() {
       {/* Content */}
       <div className='relative z-10 p-4'>
         <Routes>
-          <Route path='/' element={<ChatPage />} />
-          <Route path='/login' element={<LoginPage />} />
-          <Route path='/signup' element={<SignUpPage />} />
+          <Route path='/' element={authUser ? <ChatPage /> : <Navigate to={"/login"} />} />
+          <Route path='/login' element={!authUser ? <LoginPage /> : <Navigate to= {"/"} />} />
+          <Route path='/signup' element={!authUser ? <SignUpPage />: <Navigate to= {"/"} />} />
         </Routes>
+        <Toaster />
       </div>
     </div>
   );
