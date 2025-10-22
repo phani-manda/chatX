@@ -19,7 +19,7 @@ const io = new Server(server, {
 io.use(socketAuthMiddleware);
 
 //this is for storing online users
-const userSockets = newMap(); //{userId:SocketId}
+const userSockets = new Map(); //{userId:SocketId}
 
 io.on("connection", (socket) => {
     console.log("🟢 User connected:", socket.user.username, "| Socket ID:", socket.id);
