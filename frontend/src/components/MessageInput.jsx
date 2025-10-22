@@ -55,7 +55,7 @@ function MessageInput() {
             <img
               src={imagePreview}
               alt="Preview"
-              className="w-20 h-20 object-cover reounded-lg border border-slate-700"
+              className="w-20 h-20 object-cover rounded-lg border border-slate-700"
             />
             <button
             onClick={removeImage}
@@ -92,7 +92,7 @@ function MessageInput() {
           type="button"
           onClick={() => fileInputRef.current?.click()}
           className={`bg-slate-800/50 text-slate-400 hover:text-slate-200 rounded-lg px-4 transition-colors ${
-            imagePreview ? "text-cyan-500}" : ""
+            imagePreview ? "text-cyan-500" : ""
           }`}
           >
            <ImageIcon className="w-5 h-5"/>

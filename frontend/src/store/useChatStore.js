@@ -76,10 +76,11 @@ export const useChatStore = create((set, get) => ({
 
    try {
     const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData)
-    set({messages: messages.concat(res.data)});
+    set({messages: get().messages.filter(m => m._id !== tempId).concat(res.data)});
+    toast.success("Message sent successfully");
     
    } catch (error) {
-    set({messages: messages});
+    set({messages: get().messages.filter(m => m._id !== tempId)});
     toast.error(error.response?.data?.message || "Something went wrong");
    }
   },
