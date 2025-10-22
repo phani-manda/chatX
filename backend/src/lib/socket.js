@@ -19,25 +19,38 @@ const io = new Server(server, {
 io.use(socketAuthMiddleware);
 
 //this is for storing online users
-const userSocketMap = {}; //{userId:SocketId}
+const userSockets = newMap(); //{userId:SocketId}
 
 io.on("connection", (socket) => {
     console.log("🟢 User connected:", socket.user.username, "| Socket ID:", socket.id);
 
-    const userId = socket.user._id;
-    userSocketMap[userId] = socket.id;
+    const userId = socket.user._id.toString();
+    let set = userSockets.get(userId);
+
+    if(!set){
+        set = new Set();
+        userSockets.set(userId, set);
+    }
+    set.add(socket.id);
     
-    console.log("📊 Current online users:", Object.keys(userSocketMap).length);
-    console.log("📍 User socket map:", userSocketMap);
+    
+    console.log("📊 Current online users:", Array.from(userSockets.keys()).length);
+    console.log("📍 User socket map:", userSockets);
 
     // io.emit is used to send events to all connected clients
-    io.emit("getOnlineUsers", Object.keys(userSocketMap));
+    io.emit("getOnlineUsers", Array.from(userSockets.keys()));
 
     socket.on("disconnect", () => {
         console.log("🔴 User disconnected:", socket.user.username, "| Socket ID:", socket.id);
-        delete userSocketMap[userId];
-        console.log("📊 Remaining online users:", Object.keys(userSocketMap).length);
-        io.emit("getOnlineUsers", Object.keys(userSocketMap));
+        const set = userSockets.get(userId);
+        if(set){
+            set.delete(socket.id);
+            if(set.size === 0){
+                userSockets.delete(userId);
+            }
+        }
+        console.log("📊 Remaining online users:", Array.from(userSockets.keys()).length);
+        io.emit("getOnlineUsers", Array.from(userSockets.keys()));
     });
   });
 

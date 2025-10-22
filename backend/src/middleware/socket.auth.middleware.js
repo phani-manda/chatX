@@ -5,8 +5,14 @@ import User from "../models/user.js";
 export const socketAuthMiddleware = async (socket, next) => {
     try {
         //extract token from http-only cookies
-        const token = socket.handshake.headers.cookie?.split(";").find((row) => row.startsWith("jwt="))?.split("=")[1];
-
+        const rawCookie = socket.handshake.headers.cookie || "";
+        const token = (() => {
+          const parts = rawCookie.split(";").map(v => v.trim());
+          const row = parts.find(v => v.startsWith("jwt="));
+          if (!row) return undefined;
+          const idx = row.indexOf("=");
+          return row.slice(idx + 1);
+        })();
         if(!token){
             console.log("❌ Socket connection rejected: no token provided");
             return next(new Error("Authentication error"));
