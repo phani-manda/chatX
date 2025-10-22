@@ -1,5 +1,5 @@
 import { useChatStore } from "../store/useChatStore";
-import NoConversationPlaceholder from "../components/NoConversationPlaceholder.jsx";
+import NoConversationPlaceholder from "../components/NoConversationPlaceHolder";
 import BorderAnimatedContainer from "../components/BorderAnimatedContainer";
 import ProfileHeader from "../components/ProfileHeader";
 import ActiveTabSwitch from "../components/ActiveTabSwitch";
