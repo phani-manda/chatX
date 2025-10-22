@@ -2,21 +2,22 @@ import React from 'react'
 import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import BorderAnimatedContainer from "../components/BorderAnimatedContainer";
-import { MessageCircleIcon, LockIcon, MailIcon, LoaderIcon } from "lucide-react";
+import { MessageCircleIcon, LockIcon, MailIcon, LoaderIcon, EyeIcon, EyeOffIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
 function LoginPage() {
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
   const { login, isLoggingIn } = useAuthStore();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    login(formData);
+    await login(formData);
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen w-full p-4">
-      <div className="w-full max-w-4xl">
+      <div className="w-full max-w-6xl h-[750px]">
         <BorderAnimatedContainer>
           <div className="w-full flex flex-col md:flex-row bg-slate-900 rounded-xl overflow-hidden">
             {/* FORM CLOUMN - LEFT SIDE */}
@@ -31,16 +32,16 @@ function LoginPage() {
 
                 {/* FORM */}
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  
-
                   {/* EMAIL INPUT */}
                   <div>
-                    <label className="auth-input-label">Email</label>
+                    <label className="auth-input-label" htmlFor="email">Email</label>
                     <div className="relative">
                       <MailIcon className="auth-input-icon" />
-
                       <input
+                        id="email"
+                        name="email"
                         type="email"
+                        autoComplete="email"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         className="input"
@@ -53,20 +54,30 @@ function LoginPage() {
 
                   {/* PASSWORD INPUT */}
                   <div>
-                    <label className="auth-input-label">Password</label>
+                    <label className="auth-input-label" htmlFor="password">Password</label>
                     <div className="relative">
                       <LockIcon className="auth-input-icon" />
-
                       <input
-                        type="password"
+                        id="password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        autoComplete="current-password"
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         className="input"
                         placeholder="Enter your password"
                         required
                         minLength={6}
-                        maxLength={100}                      
+                        maxLength={100}
                       />
+                      <button
+                        type="button"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        onClick={() => setShowPassword((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                      >
+                        {showPassword ? <EyeOffIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                      </button>
                     </div>
                   </div>
 
@@ -82,7 +93,7 @@ function LoginPage() {
 
                 <div className="mt-6 text-center">
                   <Link to="/signup" className="auth-link">
-                    don't have an account? Signup
+                    Don't have an account? Sign up
                   </Link>
                 </div>
               </div>
@@ -95,6 +106,8 @@ function LoginPage() {
                   src="/login.png"
                   alt="People using mobile devices"
                   className="w-full h-auto object-contain"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className="mt-6 text-center">
                   <h3 className="text-xl font-medium text-cyan-400">Connect anywhere anytime</h3>

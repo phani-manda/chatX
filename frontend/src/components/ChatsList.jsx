@@ -18,8 +18,8 @@ function ChatsList() {
     <>
     {chats.map((chat) => (
       <div 
-      key={chats._id}
-      className="bg-cyn-500/10 p-4 rounded-lg cursor-pointer hover:bg-cyn-500-500/20 transition-colors"
+      key={chat._id}
+      className="bg-cyan-500/10 p-4 rounded-lg cursor-pointer hover:bg-cyan-500/20 transition-colors"
       onClick={() => setSelectedUser(chat)}
       >
         <div className="flex items-center gap-3">
@@ -40,4 +40,4 @@ function ChatsList() {
   )
 }
 
-export default ChatsList
+export default ChatsList;
