@@ -165,7 +165,6 @@ const CreateGroupModal = ({ isOpen, onClose }) => {
                   <div
                     key={contact._id}
                     className="flex items-center gap-3 p-3 hover:bg-base-200 cursor-pointer"
-                    onClick={() => toggleMember(contact._id)}
                   >
                     <input
                       type="checkbox"

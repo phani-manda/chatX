@@ -109,7 +109,7 @@ export const getGroupMessages = async (req, res) => {
             return res.status(404).json({ message: "Group not found" });
         }
 
-        if (!group.members.includes(userId)) {
+        if (!group.members.some(m => m.toString() === userId.toString())) {
             return res.status(403).json({ message: "You are not a member of this group" });
         }
 
@@ -145,7 +145,7 @@ export const sendGroupMessage = async (req, res) => {
             return res.status(404).json({ message: "Group not found" });
         }
 
-        if (!group.members.includes(senderId)) {
+        if (!group.members.some(m => m.toString() === senderId.toString())) {
             return res.status(403).json({ message: "You are not a member of this group" });
         }
 
@@ -216,7 +216,7 @@ export const addGroupMember = async (req, res) => {
         }
 
         // Check if already a member
-        if (group.members.includes(userId)) {
+        if (!group.members.some(m => m.toString() === userId.toString())) {
             return res.status(400).json({ message: "User is already a member" });
         }
 
