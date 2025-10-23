@@ -5,6 +5,7 @@ import { useAuthStore } from "./useAuthStore";
 
 export const useChatStore = create((set, get) => ({
   allContacts: [],
+  contacts: [], // Alias for allContacts for easier access
   chats: [],
   messages: [],
   activeTab: "chats",
@@ -12,10 +13,21 @@ export const useChatStore = create((set, get) => ({
   isUsersLoading: false,
   isMessagesLoading: false,
   isSoundEnabled: JSON.parse(localStorage.getItem("isSoundEnabled")) === true,
+  isUserTyping: false,
+  replyingTo: null,
+
+  setReplyingTo: (message) => set({ replyingTo: message }),
 
   toggleSound: () => {
     localStorage.setItem("isSoundEnabled", !get().isSoundEnabled);
     set({ isSoundEnabled: !get().isSoundEnabled });
+  },
+
+  emitTyping: (receiverId, isTyping) => {
+    const socket = useAuthStore.getState().socket;
+    if (socket) {
+      socket.emit("typing", { receiverId, isTyping });
+    }
   },
 
   setActiveTab: (tab) => set({ activeTab: tab }),
@@ -25,7 +37,7 @@ export const useChatStore = create((set, get) => ({
     set({ isUsersLoading: true });
     try {
       const res = await axiosInstance.get("/messages/contacts");
-      set({ allContacts: res.data });
+      set({ allContacts: res.data, contacts: res.data });
     } catch (error) {
       toast.error(error.response.data.message);
     } finally {
@@ -67,6 +79,7 @@ export const useChatStore = create((set, get) => ({
       receiverId: selectedUser._id,
       text: messageData.text,
       image: messageData.image,
+      replyTo: messageData.replyTo || null,
       createdAt: new Date().toISOString(),
       isOptimistic:true,
     };
@@ -83,6 +96,16 @@ export const useChatStore = create((set, get) => ({
     set({messages: get().messages.filter(m => m._id !== tempId)});
     toast.error(error.response?.data?.message || "Something went wrong");
    }
+  },
+
+  deleteMessage: async (messageId) => {
+    try {
+      await axiosInstance.delete(`/messages/${messageId}`);
+      set({ messages: get().messages.filter(m => m._id !== messageId) });
+      toast.success("Message deleted");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to delete message");
+    }
   },
 
   subscribeToMessages: () => {
@@ -109,10 +132,22 @@ export const useChatStore = create((set, get) => ({
       }
     });
 
+    socket.on("messageDeleted", ({ messageId }) => {
+      set({ messages: get().messages.filter(m => m._id !== messageId) });
+    });
+
+    socket.on("userTyping", ({ senderId, isTyping }) => {
+      if (senderId === selectedUser._id) {
+        set({ isUserTyping: isTyping });
+      }
+    });
+
   },
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
     console.log("🔕 Unsubscribing from messages");
     socket.off("newMessage");
+    socket.off("messageDeleted");
+    socket.off("userTyping");
   },
 }));

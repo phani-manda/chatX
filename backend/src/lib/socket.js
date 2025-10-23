@@ -38,6 +38,28 @@ io.on("connection", (socket) => {
     // io.emit is used to send events to all connected clients
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
+    // Typing indicator for 1-on-1 chats
+    socket.on("typing", ({ receiverId, isTyping }) => {
+      const receiverSocketId = userSocketMap[receiverId];
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("userTyping", {
+          senderId: userId,
+          isTyping,
+        });
+      }
+    });
+
+    // Typing indicator for group chats
+    socket.on("groupTyping", ({ groupId, isTyping }) => {
+      // Broadcast to all members in the group except sender
+      socket.broadcast.emit("groupUserTyping", {
+        groupId,
+        userId,
+        username: socket.user.username,
+        isTyping,
+      });
+    });
+
     socket.on("disconnect", () => {
         console.log("🔴 User disconnected:", socket.user.username, "| Socket ID:", socket.id);
         delete userSocketMap[userId];

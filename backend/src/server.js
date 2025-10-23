@@ -3,6 +3,7 @@ import {ENV} from './lib/env.js';
 import path from 'path';
 import authRoutes from './routes/auth.route.js';
 import messageRoutes from './routes/message.route.js';
+import groupRoutes from './routes/group.route.js';
 import { connectDB } from './lib/db.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -18,6 +19,7 @@ app.use(cookieParser());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/groups', groupRoutes);
 
 
 if (ENV.NODE_ENV === 'production') {
