@@ -6,10 +6,23 @@ import ChatHeader from "./ChatHeader";
 import MessageInput from "./MessageInput";
 import MessagesLoadingSkeleton from "./MessagesLoadingSkeleton";
 import NoChatHistoryPlaceholder from "./NoChatHistoryPlaceholder";
+import Message from "./Message";
 
 function ChatContainer() {
 
-  const { selectedUser, getMessagesByUserId, messages, isMessagesLoading, subscribeToMessages, unsubscribeFromMessages } = useChatStore();
+  const { 
+    selectedUser, 
+    getMessagesByUserId, 
+    messages, 
+    isMessagesLoading, 
+    subscribeToMessages, 
+    unsubscribeFromMessages,
+    deleteMessage,
+    isUserTyping,
+    replyingTo,
+    setReplyingTo,
+    emitTyping
+  } = useChatStore();
   const  {authUser} = useAuthStore();
   const messageEndRef = useRef(null);
 
@@ -29,37 +42,57 @@ function ChatContainer() {
   }, [messages]);
 
 
+  const handleEmitTyping = (isTyping) => {
+    if (selectedUser) {
+      emitTyping(selectedUser._id, isTyping);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       <ChatHeader />
-      <div className="flex-1 px-6 overflow-y-auto py-8">
+      <div className="flex-1 px-3 sm:px-6 overflow-y-auto py-4 sm:py-8">
         {messages.length > 0 && !isMessagesLoading ? (
-          <div className="max-w-3xl mx-auto space-y-6">
+          <div className="max-w-3xl mx-auto space-y-3 sm:space-y-6">
             {messages.map((msg) => (
-              <div key={msg._id} className={`chat ${msg.senderId === authUser._id ? "chat-end": "chat-start"}`}>
-                <div className={`chat-bubble relative ${
-                  msg.senderId === authUser._id ? "bg-cyan-600 text-white" : "bg-slate-800 text-slate-200"
-                }`}>
-                  {msg.image && (
-                    <img src={msg.image} alt="Shared" className="rounded-lg h-48 object-cover"/>
-                  )}
-                  {msg.text && <p className="mt-2">{msg.text}</p>}
-                  <p className="text-xs mt-1 opacity-75 flex items-center gap-1">
-                    {new Date(msg.createdAt).toLocaleTimeString(undefined, {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
+              <Message 
+                key={msg._id}
+                message={msg}
+                isOwnMessage={msg.senderId === authUser._id}
+                onReply={setReplyingTo}
+                onDelete={deleteMessage}
+              />
+            ))}
+            
+            {/* Typing Indicator */}
+            {isUserTyping && (
+              <div className="flex gap-2">
+                <img
+                  src={selectedUser.profilePic || "/avatar.png"}
+                  alt={selectedUser.username}
+                  className="size-8 sm:size-10 rounded-full object-cover shrink-0"
+                />
+                <div className="bg-base-200 rounded-lg p-3 flex items-center gap-1">
+                  <div className="flex gap-1">
+                    <div className="size-2 rounded-full bg-base-content/60 animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="size-2 rounded-full bg-base-content/60 animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="size-2 rounded-full bg-base-content/60 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  </div>
                 </div>
               </div>
-            ))}
+            )}
+
             <div ref={messageEndRef}/>
           </div>
         ): isMessagesLoading ? <MessagesLoadingSkeleton/> : (
           <NoChatHistoryPlaceholder name = {selectedUser.username} />
         )}
       </div>
-      <MessageInput/>
+      <MessageInput
+        replyingTo={replyingTo}
+        onCancelReply={() => setReplyingTo(null)}
+        emitTyping={handleEmitTyping}
+      />
     </div>
   );
 }

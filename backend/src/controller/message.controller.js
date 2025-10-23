@@ -27,7 +27,12 @@ export const getMessagesByUserId = async (req, res) => {
                 { senderId: myId, receiverId: userToChatId },
                 { senderId: userToChatId, receiverId: myId },
             ],
-        }).sort({ createdAt: 1 });
+        })
+        .populate({
+            path: 'replyTo',
+            populate: { path: 'senderId', select: 'username profilePic' }
+        })
+        .sort({ createdAt: 1 });
 
         res.status(200).json(messages);
 
@@ -39,7 +44,7 @@ export const getMessagesByUserId = async (req, res) => {
 
 export const sendMessage = async (req, res) => {
     try {
-        const { text, image } = req.body;
+        const { text, image, replyTo } = req.body;
         const { id: receiverId } = req.params;
         const senderId = req.user._id;
 
@@ -63,9 +68,16 @@ export const sendMessage = async (req, res) => {
             receiverId,
             text,
             image: imageUrl,
+            replyTo: replyTo || null,
             });
 
         await newMessage.save();
+
+        // Populate replyTo before sending
+        await newMessage.populate({
+            path: 'replyTo',
+            populate: { path: 'senderId', select: 'username profilePic' }
+        });
 
         const receiverSocketId = getReceiverSocketId(receiverId);
         if(receiverSocketId){
@@ -109,3 +121,39 @@ export const getChatPartners = async (req, res) => {
         res.status(500).json({error: "Internal server error"});
      }
 }
+
+export const deleteMessage = async (req, res) => {
+    try {
+        const { id: messageId } = req.params;
+        const userId = req.user._id;
+
+        const message = await Message.findById(messageId);
+        if (!message) {
+            return res.status(404).json({ message: "Message not found" });
+        }
+
+        // Only sender can delete their message
+        if (message.senderId.toString() !== userId.toString()) {
+            return res.status(403).json({ message: "You can only delete your own messages" });
+        }
+
+        // Delete image from cloudinary if exists
+        if (message.image) {
+            const publicId = message.image.split('/').pop().split('.')[0];
+            await cloudinary.uploader.destroy(publicId);
+        }
+
+        await Message.findByIdAndDelete(messageId);
+
+        // Emit delete event to receiver
+        const receiverSocketId = getReceiverSocketId(message.receiverId);
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("messageDeleted", { messageId });
+        }
+
+        res.status(200).json({ message: "Message deleted successfully" });
+    } catch (error) {
+        console.log("Error in deleteMessage controller:", error.message);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};

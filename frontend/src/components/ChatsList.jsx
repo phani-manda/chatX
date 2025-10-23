@@ -22,16 +22,16 @@ function ChatsList() {
     {chats.map((chat) => (
       <div 
       key={chat._id}
-      className="bg-cyan-500/10 p-4 rounded-lg cursor-pointer hover:bg-cyan-500/20 transition-colors"
+      className="bg-cyan-500/10 p-3 sm:p-4 rounded-lg cursor-pointer hover:bg-cyan-500/20 transition-colors"
       onClick={() => setSelectedUser(chat)}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <div className={`avatar ${onlineUsers.includes(String(chat._id)) ? "online":"offline"}`}>
-            <div className="size-12 rounded-full">
+            <div className="size-10 sm:size-12 rounded-full">
               <img src={chat.profilePic || "avatar.png"} alt={chat.username} />
             </div>
           </div>
-          <h4 className="text-slate-200 font-medium truncate">{chat.username}</h4>
+          <h4 className="text-slate-200 font-medium text-sm sm:text-base truncate">{chat.username}</h4>
         </div>
       </div>
     ))
